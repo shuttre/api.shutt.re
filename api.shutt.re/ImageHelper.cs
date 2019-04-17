@@ -14,11 +14,10 @@ namespace api.shutt.re
     {
         private readonly string _outputDirectory;
         
-        public ImageHelper(IConfiguration configuration)
+        public ImageHelper(Config config)
         {
-            var imTemptDir = configuration["MagickNetTempDirectory"];
-            var outDir = configuration["FileStorageDirectory"];
-
+            var imTemptDir = config.MagickNetTempDirectory;
+            var outDir = config.FileStorageDirectory;
             SetMagickNetTempDir(imTemptDir?.Trim());
             _outputDirectory = CheckFileStorageDir(outDir?.Trim());
         }

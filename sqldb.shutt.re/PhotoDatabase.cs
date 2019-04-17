@@ -16,8 +16,11 @@ namespace sqldb.shutt.re
 {
     public class PhotoDatabase : IPhotoDatabase
     {
+        private const ulong DatabaseVersion = 1;
+        
         private static readonly MemoryCache Cache = new MemoryCache(new MemoryCacheOptions());
         private readonly string _connectionString;
+        private static Config _config;
 
         public PhotoDatabase(string connectionString)
         {
@@ -995,6 +998,39 @@ namespace sqldb.shutt.re
             }
 
             return numberOfModifiedQueuedImageRecords == 1;
+        }
+
+        public Config GetConfig()
+        {
+            if (_config != null) return _config;
+            using (var conn = new MySqlConnection(_connectionString))
+            {
+                try
+                {
+                    var configRows = conn.QueryAsync<ConfigRow>(Queries.GetAllConfigRows).Result;
+                    var config = new Config(configRows);
+                    if (ulong.TryParse(config.DatabaseVersion, out var databaseVersion))
+                    {
+                        if (databaseVersion == PhotoDatabase.DatabaseVersion)
+                        {
+                            _config = config;
+                            return _config;
+                        }
+                        Console.Error.WriteLine($"Incorrect database_version! Code expect " +
+                                                $"{PhotoDatabase.DatabaseVersion}, while database is at version " +
+                                                $"{databaseVersion}. Please upgrade the database using the scripts " +
+                                                $"provided with shutt.re");
+                        return null;
+                    }
+                    Console.Error.WriteLine("Could not read database_version from config table.");
+                    return null;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error:" + e);
+                    return null;
+                }
+            }
         }
     }
 }

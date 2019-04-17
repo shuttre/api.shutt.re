@@ -40,5 +40,7 @@ namespace sqldb.shutt.re
         Task<IEnumerable<QueuedImage>> GetImageQueueEntries(int numberOfQueueEntries);
         Task<bool> AddImageToAlbum(Image image, AlbumImageMap albumImageMap, List<int> sizes,
             Dictionary<int, ImageFile> files, ulong queuedImageId);
+
+        Config GetConfig();
     }
 }

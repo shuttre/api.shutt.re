@@ -276,5 +276,8 @@
 
         public static string SetQueuedImageStatus =>
             @"UPDATE queued_image SET status = @status WHERE queued_image_id = @queued_image_id";
+
+        public static string GetAllConfigRows => 
+            @"SELECT `key` `Key`, `value` `Value` FROM config";
     }
 }
