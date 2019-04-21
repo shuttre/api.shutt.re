@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using sqldb.shutt.re;
-using sqldb.shutt.re.Models;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using sqldb.shutt.re;
+using sqldb.shutt.re.Models;
 
 namespace api.shutt.re.Controllers
 {

@@ -7,6 +7,7 @@ namespace api.shutt.re
 {
     public interface IImageHelper
     {
+        string GetFullPath(string imagePath);
         CreateImageFilesResult CreateImageFiles(FileStream fileStream, string contentType, string fileHash);
     }
     

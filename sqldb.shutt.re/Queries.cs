@@ -279,5 +279,53 @@
 
         public static string GetAllConfigRows => 
             @"SELECT `key` `Key`, `value` `Value` FROM config";
+
+        public static string GetImagesInAlbum =>
+            @"SELECT 
+            a.album_id AlbumId, 
+            i.image_id ImageId,
+            f.image_file_id ImageFileId, 
+            a.album_name AlbumName,
+            f.path Path, 
+            f.mime_type MimeType, 
+            f.width Width, 
+            f.height Height,
+            aim.image_name ImageName,
+            IF(aa.read_original=1, i.original_hash, NULL) OriginalHash,
+            IF(aa.read_original=1, aim.original_file_name, NULL) OriginalFileName, 
+            aa.`read` `Read`, 
+            aa.read_original ReadOriginal, 
+            aa.`write` `Write`, 
+            aa.`share` `Share`, 
+            aa.admin Admin,
+            i.icon_image_file_id IconImageFileId, 
+            i.small_image_file_id SmallImageFileId, 
+            i.medium_image_file_id MediumImageFileId, 
+            i.large_image_file_id LargeImageFileId, 
+            i.fullsize_image_file_id FullsizeImageFileId, 
+            IF(aa.read_original=1, i.original_image_file_id, NULL) OriginalImageFileId 
+            FROM 
+            album a, 
+            album_access aa, 
+            album_image_map aim, 
+            image i, 
+            image_file f
+            WHERE a.album_id = aa.album_id
+            AND aim.album_id = a.album_id
+            AND aim.image_id = i.image_id
+            AND 
+            (
+                f.image_file_id = i.icon_image_file_id
+                OR f.image_file_id = i.small_image_file_id
+                OR f.image_file_id = i.medium_image_file_id
+                OR f.image_file_id = i.large_image_file_id
+                OR f.image_file_id = i.fullsize_image_file_id
+                OR (f.image_file_id = i.original_image_file_id AND aa.read_original=1)
+            )
+            AND aa.`read` = 1
+            AND aa.user_id = @user_id
+            AND a.album_id = @album_id";
+        
+        public static string GetImageFromAlbum => $"{GetImagesInAlbum} AND i.image_id = @image_id";
     }
 }

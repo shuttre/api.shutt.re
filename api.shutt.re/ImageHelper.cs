@@ -65,12 +65,12 @@ namespace api.shutt.re
             }
         }
 
-        public string GetImagePath(string fullPath)
-        {
-            return (fullPath?.StartsWith(_outputDirectory)).GetValueOrDefault()
-                ? fullPath?.Substring(_outputDirectory.Length)
-                : null;
-        }
+//        public string GetImagePath(string fullPath)
+//        {
+//            return (fullPath?.StartsWith(_outputDirectory)).GetValueOrDefault()
+//                ? fullPath?.Substring(_outputDirectory.Length)
+//                : null;
+//        }
 
         public string GetFullPath(string imagePath)
         {

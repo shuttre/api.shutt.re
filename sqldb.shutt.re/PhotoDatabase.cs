@@ -16,7 +16,7 @@ namespace sqldb.shutt.re
 {
     public class PhotoDatabase : IPhotoDatabase
     {
-        private const ulong DatabaseVersion = 1;
+        private const ulong DatabaseVersion = 2;
         
         private static readonly MemoryCache Cache = new MemoryCache(new MemoryCacheOptions());
         private readonly string _connectionString;
@@ -1024,6 +1024,53 @@ namespace sqldb.shutt.re
                     }
                     Console.Error.WriteLine("Could not read database_version from config table.");
                     return null;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error:" + e);
+                    return null;
+                }
+            }
+        }
+
+        public async Task<IEnumerable<AlbumImage>> GetImagesInAlbumByUserIdAndAlbumId(ulong userId, ulong albumId)
+        {
+            using (var conn = new MySqlConnection(_connectionString))
+            {
+                try
+                {
+                    var paramGetImages = new DynamicParameters();
+                    paramGetImages.Add(QueryParameters.UserId, userId);
+                    paramGetImages.Add(QueryParameters.AlbumId, albumId);
+                    var fetchedAlbumImageRows = await conn.QueryAsync<AlbumImage.DbRow>(
+                        Queries.GetImagesInAlbum, paramGetImages);
+                    
+                    var albumImages = AlbumImage.GetAlbumImageList(fetchedAlbumImageRows);
+                    return albumImages;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error:" + e);
+                    return null;
+                }
+            }
+        }
+
+        public async Task<AlbumImage> GetImageByUserIdAlbumIdAndImageId(ulong userId, ulong albumId, ulong imageId)
+        {
+            using (var conn = new MySqlConnection(_connectionString))
+            {
+                try
+                {
+                    var paramGetImages = new DynamicParameters();
+                    paramGetImages.Add(QueryParameters.UserId, userId);
+                    paramGetImages.Add(QueryParameters.AlbumId, albumId);
+                    paramGetImages.Add(QueryParameters.ImageId, imageId);
+                    var fetchedAlbumImageRows = await conn.QueryAsync<AlbumImage.DbRow>(
+                        Queries.GetImageFromAlbum, paramGetImages);
+                    
+                    var albumImages = new AlbumImage(fetchedAlbumImageRows.ToList());
+                    return albumImages;
                 }
                 catch (Exception e)
                 {

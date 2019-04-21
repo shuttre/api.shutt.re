@@ -42,5 +42,7 @@ namespace sqldb.shutt.re
             Dictionary<int, ImageFile> files, ulong queuedImageId);
 
         Config GetConfig();
+        Task<IEnumerable<AlbumImage>> GetImagesInAlbumByUserIdAndAlbumId(ulong userId, ulong albumId);
+        Task<AlbumImage> GetImageByUserIdAlbumIdAndImageId(ulong userId, ulong albumId, ulong imageId);
     }
 }

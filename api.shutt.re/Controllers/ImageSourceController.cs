@@ -1,17 +1,11 @@
-﻿using System;
-using System.Buffers.Text;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using sqldb.shutt.re;
-using sqldb.shutt.re.Models;
 using api.shutt.re.Models.RequestBody;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.StaticFiles;
+using sqldb.shutt.re;
+using sqldb.shutt.re.Models;
 
 namespace api.shutt.re.Controllers
 {
