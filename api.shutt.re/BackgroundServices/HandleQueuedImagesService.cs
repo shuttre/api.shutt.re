@@ -56,7 +56,6 @@ namespace api.shutt.re.BackgroundServices
 
             var (orgFile, orgFileContentType) = await Utils.GetFileStreamAndContentType(_pdb,
                 queuedImage.UserId,
-                queuedImage.ImageSourceId,
                 queuedImage.Path);
 
             if (!Utils.ContentTypeIsImage(orgFileContentType))
@@ -80,7 +79,7 @@ namespace api.shutt.re.BackgroundServices
 
             Console.WriteLine($"[Handle queuedImage (id: {queuedImage.QueuedImageId}, " +
                               $"success: {insertImageSuccess.ToString()})] userId: {queuedImage.UserId}, " +
-                              $"albumId: {queuedImage.AlbumId}, imageSourceId: {queuedImage.ImageSourceId}, " +
+                              $"albumId: {queuedImage.AlbumId}, " +
                               $"virtualPath: {Utils.Base64Decode(queuedImage.Path)}, realPath: {orgFile.Name}, " +
                               $"contentType: {orgFileContentType}, fileHash: {fileHash}");
 

@@ -20,6 +20,13 @@ namespace sqldb.shutt.re.Models
         public string OidcAuthorityUrl => _configurations.GetValueOrDefault( "oidc_authority_url");
         public string MagickNetTempDirectory => _configurations.GetValueOrDefault( "magick_net_temp_directory");
         public string FileStorageDirectory => _configurations.GetValueOrDefault( "file_storage_directory");
+        public string OidcAuthorizeEndpoint => _configurations.GetValueOrDefault( "oidc_authorize_endpoint");
+        public string OidcTokenEndpoint => _configurations.GetValueOrDefault( "oidc_token_endpoint");
+        public string OidcClientId => _configurations.GetValueOrDefault( "oidc_client_id");
+        public string FrontendUrl => _configurations.GetValueOrDefault( "frontend_url");
+        public string ClaimRequirementsJson => _configurations.GetValueOrDefault( "claim_requirements");
+        
+        public ClaimRequirements ClaimRequirements => new ClaimRequirements(this.ClaimRequirementsJson);
     }
 
     // ReSharper disable once ClassNeverInstantiated.Global

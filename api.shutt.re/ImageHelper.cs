@@ -141,8 +141,10 @@ namespace api.shutt.re
                     .Select(x => Math.Min(maxDim, x))
                     .ToList();
 
+                image.AutoOrient();
+
                 image.Format = MagickFormat.Jpeg;
-                ClearExifDataKeepColorProfile(image);
+                ClearExifDataKeepColorProfile(image);                
                 
                 foreach (var size in sizes.Distinct())
                 {

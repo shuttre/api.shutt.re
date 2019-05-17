@@ -190,22 +190,22 @@
             WHERE user_id = @user_id";
         
         public static string InsertQueuedImage =>
-            @"INSERT INTO queued_image (image_source_id, user_id, album_id, path, path_hash, `status`)
-            SELECT @image_source_id, @user_id, y.album_id, @path, SHA2(@path, 256), 1
+            @"INSERT INTO queued_image (user_id, album_id, path, path_hash, `status`)
+            SELECT @user_id, y.album_id, @path, SHA2(@path, 256), 1
             FROM album_access y WHERE y.album_id = @album_id AND y.user_id = @user_id AND y.admin != 0;";
 
         public static string GetQueuedImageByQueuedImageId =>
-            @"SELECT queued_image_id QueuedImageId, image_source_id ImageSourceId, 
+            @"SELECT queued_image_id QueuedImageId,  
             user_id UserId, album_id AlbumId, path Path, `status` `Status`, status_msg StatusMsg
             FROM queued_image
             WHERE queued_image_id = @queued_image_id";
         public static string GetQueuedImageByUserId =>
-            @"SELECT queued_image_id QueuedImageId, image_source_id ImageSourceId, 
+            @"SELECT queued_image_id QueuedImageId,  
             user_id UserId, album_id AlbumId, path Path, `status` `Status`, status_msg StatusMsg
             FROM queued_image
             WHERE user_id = @user_id";
         public static string GetQueuedImageEntries =>
-            @"SELECT queued_image_id QueuedImageId, image_source_id ImageSourceId, 
+            @"SELECT queued_image_id QueuedImageId,  
             user_id UserId, album_id AlbumId, path Path, `status` `Status`, status_msg StatusMsg
             FROM queued_image
             LIMIT @lim";

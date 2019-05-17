@@ -1,14 +1,17 @@
 ﻿using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using api.shutt.re.BackgroundServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using sqldb.shutt.re;
 using sqldb.shutt.re.Models;
 
@@ -22,6 +25,7 @@ namespace api.shutt.re
         }
 
         private IConfiguration StaticConfiguration { get; }
+        private readonly string _myCorsOriginsPolicy = "_myCorsOriginsPolicy";
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -31,10 +35,10 @@ namespace api.shutt.re
             // Examples: 'Server=127.0.0.1;Database=my_db_name;Uid=my_username;Pwd=my_password;SslMode=none;'
             // Examples: 'Server=127.0.0.1;Database=my_db_name;Uid=my_username;Pwd=my_password;SslMode=Preferred;'
             // Examples: 'Server=127.0.0.1;Database=my_db_name;Uid=my_username;Pwd=my_password;SslMode=Required;'
-            var connectionString = StaticConfiguration["MySqlConnectionString"];
+            var connectionString = StaticConfiguration["SHUTTRE_CONNECTION_STRING"];
             IPhotoDatabase pdb = new PhotoDatabase(connectionString);
 
-            var config = pdb.GetConfig();
+            var config = pdb.GetConfig().Result;           
             if (config == null)
             {
                 Console.Error.WriteLine("Could not read configuration from database.");
@@ -45,6 +49,8 @@ namespace api.shutt.re
                 Console.Error.WriteLine("For now, 'authority_url' is the only supported verification method");
                 System.Environment.Exit(1);
             }
+            
+            var claimRequirements = config.ClaimRequirements;
 
             services.AddAuthentication(options =>
             {
@@ -53,27 +59,43 @@ namespace api.shutt.re
             }).AddJwtBearer(options =>
             {
 
+                
                 options.Authority = config.OidcAuthorityUrl;
                 options.Audience = config.OidcAudience;
                 options.Events = new JwtBearerEvents
-                {
-                    OnTokenValidated = context =>
+                {                    
+                    OnTokenValidated = async context =>
                     {
-                        if (context.SecurityToken is JwtSecurityToken securityToken)
+                        if (!(context.SecurityToken is JwtSecurityToken securityToken))
                         {
-                            var user = pdb.GetUserByOidcIdCached(securityToken.Subject).Result;
-                            if (user == null) return Task.CompletedTask;
-                            var claimsIdentity = (ClaimsIdentity)context.Principal.Identity;
-                            foreach (var claim in user.GetClaims())
+                            context.Fail("SecurityToken is not JwtSecurityToken");
+                            return;
+                        }
+                        
+                        if (!claimRequirements.Verify(securityToken.Claims))
+                        {
+                            context.Fail("claimRequirements.Verify failed");
+                            return;
+                        }
+
+                        var user = await pdb.GetUserByOidcIdCached(securityToken.Subject);
+                        if (user == null)
+                        {
+                            var newUser = await PhotoDatabaseHelper.RegisterNewUser(securityToken);
+                            if (newUser == null)
                             {
-                                claimsIdentity.AddClaim(claim);
+                                context.Fail("User not in database, and could not create user.");
+                                return;
                             }
+
+                            user = newUser;
                         }
-                        else
+                            
+                        var claimsIdentity = (ClaimsIdentity)context.Principal.Identity;
+                        foreach (var claim in user.GetClaims())
                         {
-                            Console.WriteLine("It is not JwtSecurityToken");
+                            claimsIdentity.AddClaim(claim);
                         }
-                        return Task.CompletedTask;
                     }
                 };
             });
@@ -82,6 +104,22 @@ namespace api.shutt.re
             services.AddSingleton(config);
             services.AddSingleton<IHostedService, HandleQueuedImagesService>();
             services.AddSingleton<IImageHelper, ImageHelper>();
+
+            var frontendUurl = config.FrontendUrl;
+            
+            services.AddCors(options =>
+            {
+                options.AddPolicy(_myCorsOriginsPolicy,
+                    builder =>
+                    {
+                        builder
+                            .WithOrigins(frontendUurl)
+                            .WithHeaders("Authorization", "Content-Type")
+                            .WithMethods("GET", "POST")
+                            .SetPreflightMaxAge(TimeSpan.FromSeconds(120));
+                    });
+            });
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -89,6 +127,7 @@ namespace api.shutt.re
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseAuthentication();
+            app.UseCors(_myCorsOriginsPolicy); 
             app.UseMvc();
         }
     }

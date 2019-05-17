@@ -104,7 +104,7 @@ namespace api.shutt.re.Controllers
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             var albums = (await _pdb.GetAlbumsAccessibleByUser(userId.GetValueOrDefault(), accessLevel))?.AsList();
@@ -124,7 +124,7 @@ namespace api.shutt.re.Controllers
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             var accessList = (await _pdb.GetAlbumAccessByUserIdAndAlbumId(
@@ -147,7 +147,7 @@ namespace api.shutt.re.Controllers
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             var createdAlbum = await _pdb.CreateNewAlbum(userId.GetValueOrDefault(), newAlbum.AlbumName);

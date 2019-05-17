@@ -72,7 +72,7 @@ namespace api.shutt.re.Controllers
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             var images =
@@ -87,13 +87,14 @@ namespace api.shutt.re.Controllers
         }
 
         [HttpGet("/image/{albumId}/{imageId}")]
+        [ResponseCache(Duration = 604800)]
         [Authorize]
         public async Task<ActionResult> GetImage(ulong albumId, ulong imageId, [FromQuery] string size = "metadata")
         {
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             var validSizeValues = new[] {"metadata", "icon", "small", "medium", "large", "fullsize", "original"};
@@ -120,20 +121,20 @@ namespace api.shutt.re.Controllers
                 }
 
                 var x = new FileStream(_imageHelper.GetFullPath(albumImageFile.Path), FileMode.Open);
+
+                if (!x.CanRead) return new NotFoundResult();
                 
-                if (x.CanRead)
-                {
-                    var fileExt = Path.GetExtension(albumImageFile.Path);
-                    var virtualFilename = $"image_{albumId}_{imageId}_{size}{fileExt}";
-                    return File(x, albumImageFile.MimeType, virtualFilename);
-                }
+                var fileExt = Path.GetExtension(albumImageFile.Path);
+                var virtualFilename = $"image_{albumId}_{imageId}_{size}{fileExt}";
+                
+                Response.Headers.Add("X-Width", albumImageFile.Width.ToString());
+                Response.Headers.Add("X-Height", albumImageFile.Height.ToString());
+                return File(x, albumImageFile.MimeType, virtualFilename);
             }
             catch
             {
-                return new NoContentResult();
+                return new NotFoundResult();
             }
-
-            return new NoContentResult();
 
         }
     }

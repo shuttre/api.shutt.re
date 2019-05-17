@@ -11,7 +11,6 @@ namespace api.shutt.re.Models.RequestBody
         public const int StatusFailed = 4;
 
         public ulong QueuedImageId { get; set; }
-        public ulong ImageSourceId { get; set; }
         public ulong UserId { get; set; }
         public ulong AlbumId { get; set; }
         public string Path { get; set; }

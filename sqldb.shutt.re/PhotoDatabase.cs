@@ -612,7 +612,6 @@ namespace sqldb.shutt.re
                             var paramInsert = new DynamicParameters();
                             paramInsert.Add(QueryParameters.UserId, userId);
                             paramInsert.Add(QueryParameters.AlbumId, queuedImage.AlbumId);
-                            paramInsert.Add(QueryParameters.ImageSourceId, queuedImage.ImageSourceId);
                             paramInsert.Add(QueryParameters.Path, queuedImage.Path);
 
                             int numberOfInsertedRecords;
@@ -1000,14 +999,14 @@ namespace sqldb.shutt.re
             return numberOfModifiedQueuedImageRecords == 1;
         }
 
-        public Config GetConfig()
+        public async Task<Config> GetConfig()
         {
             if (_config != null) return _config;
             using (var conn = new MySqlConnection(_connectionString))
             {
                 try
                 {
-                    var configRows = conn.QueryAsync<ConfigRow>(Queries.GetAllConfigRows).Result;
+                    var configRows = await conn.QueryAsync<ConfigRow>(Queries.GetAllConfigRows);
                     var config = new Config(configRows);
                     if (ulong.TryParse(config.DatabaseVersion, out var databaseVersion))
                     {

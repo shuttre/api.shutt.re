@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using api.shutt.re.Models.RequestBody;
 using Dapper;
@@ -41,22 +42,20 @@ namespace api.shutt.re.Controllers
                 },                
                 new ApiDescription()
                 {
-                    Url = "GET /source/dir?imageSourceId={imageSourceId}&path={encodedPath}",
+                    Url = "GET /source/dir?path={encodedPath}",
                     Arguments = new List<ApiDescriptionArgument>()
                     {
-                        new ApiDescriptionArgument("imageSourceId", "Id if the image source"),
-                        new ApiDescriptionArgument("encodedPath", "Base64 encoded path of the directory " +
-                                                           "to list")
+                        new ApiDescriptionArgument("encodedPath", "Base64 encoded path of the " +
+                                                                  "directory to list")
                     },
                     PayloadDescription = ApiDescription.EmptyPayload,
                     Comment = "List all files and directories in path."
-                },                
+                },
                 new ApiDescription()
                 {
-                    Url = "GET /source/file?imageSourceId={imageSourceId}&path={encodedPath}",
+                    Url = "GET /source/file?path={encodedPath}",
                     Arguments = new List<ApiDescriptionArgument>()
                     {
-                        new ApiDescriptionArgument("imageSourceId", "Id if the image source"),
                         new ApiDescriptionArgument("encodedPath", "Base64 encoded path of the file " +
                                                                   "to download")
                     },
@@ -68,7 +67,6 @@ namespace api.shutt.re.Controllers
                     Url = "POST /source/addToAlbum",
                     Arguments = ApiDescriptionArgument.Empty,
                     PayloadDescription = @"[{ 
-                        imageSourceId: 1234,
                         albumId: 4321,
                         path: 'L05hbWUgb2YgaW1hZ2Ugc291cmNlL3NvbWUvc3ViL2ZvbGRlcnMvdmFjYXRpb24uanBn'
                     }, {...}, ...]",
@@ -87,19 +85,19 @@ namespace api.shutt.re.Controllers
 
         [HttpGet("/source/list")]
         [Authorize]
-        public async Task<ActionResult<List<ImageSource>>> GetSources()
+        public async Task<ActionResult<List<string>>> GetSources()
         {
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             var sources = (await _pdb.GetImageSourcesForUser(userId.GetValueOrDefault()))?.AsList();
             
             if (sources != null && sources.Count > 0)
             {
-                return sources;
+                return sources.Select(x => x.SourceName).ToList();
             }
             
             return new NoContentResult();
@@ -107,17 +105,15 @@ namespace api.shutt.re.Controllers
 
         [HttpGet("/source/dir")]
         [Authorize]
-        public async Task<ActionResult<List<string>>> GetDirectory(
-            [FromQuery] ulong imageSourceId, 
-            [FromQuery] string path)
+        public async Task<ActionResult<List<string>>> GetDirectory([FromQuery] string path)
         {
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
-            var dirContent = await Utils.GetDirectoryContent(_pdb, userId.GetValueOrDefault(), imageSourceId, path);
+            var dirContent = await Utils.GetDirectoryContent(_pdb, userId.GetValueOrDefault(), path);
 
             if (dirContent == null)
             {
@@ -131,18 +127,17 @@ namespace api.shutt.re.Controllers
         }
 
         [HttpGet("/source/file")]
+        [ResponseCache(Duration = 604800)]
         [Authorize]
-        public async Task<ActionResult> GetFile(
-            [FromQuery] ulong imageSourceId, 
-            [FromQuery] string path)
+        public async Task<ActionResult> GetFile([FromQuery] string path)
         {
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
-            var fileContent = await Utils.GetFileStreamAndContentType(_pdb, userId.GetValueOrDefault(), imageSourceId, path);
+            var fileContent = await Utils.GetFileStreamAndContentType(_pdb, userId.GetValueOrDefault(), path);
 
             if (fileContent?.Item1 == null || fileContent.Item2 == null)
             {
@@ -158,13 +153,15 @@ namespace api.shutt.re.Controllers
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             foreach (var queuedImage in queuedImages)
             {
                 queuedImage.Status = 0;
-                var fileToQueue = await Utils.GetFileStreamAndContentType(_pdb, userId.GetValueOrDefault(), queuedImage.ImageSourceId, queuedImage.Path);
+                var fileToQueue =
+                    await Utils.GetFileStreamAndContentType(_pdb, userId.GetValueOrDefault(), queuedImage.Path);
+                
                 // ReSharper disable once InvertIf
                 if (fileToQueue == null)
                 {
@@ -175,7 +172,7 @@ namespace api.shutt.re.Controllers
             
             var queuedImagesResult = (await _pdb.AddImagesToQueue(userId.GetValueOrDefault(), queuedImages));
 
-            if (queuedImagesResult != null)
+             if (queuedImagesResult != null)
             {
                 return queuedImagesResult;
             }
@@ -190,7 +187,7 @@ namespace api.shutt.re.Controllers
             var userId = PhotoDatabaseHelper.GetUserId(User);
             if (userId == null)
             {
-                return new NotFoundResult();
+                return Unauthorized();
             }
 
             var queuedImages = (await _pdb.GetImageQueueForUser(userId.GetValueOrDefault()));

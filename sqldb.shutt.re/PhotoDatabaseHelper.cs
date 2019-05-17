@@ -1,7 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using System.Threading.Tasks;
+using sqldb.shutt.re.Models;
 
 namespace sqldb.shutt.re
 {
@@ -22,6 +24,12 @@ namespace sqldb.shutt.re
             {
                 return null;
             }
+        }
+
+        public static async Task<User> RegisterNewUser(JwtSecurityToken securityToken)
+        {
+            await Task.CompletedTask;
+            return null;
         }
     }
 }

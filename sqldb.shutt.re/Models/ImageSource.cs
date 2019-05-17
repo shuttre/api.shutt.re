@@ -22,5 +22,6 @@ namespace sqldb.shutt.re.Models
                 return prefix + SourceName + suffix;
             }
         }
-        }
+
+    }
 }

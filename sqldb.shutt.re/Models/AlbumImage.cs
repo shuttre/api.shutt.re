@@ -189,7 +189,7 @@ namespace sqldb.shutt.re.Models
                     MediumImageFile = MediumImageFile.GetPublic(),
                     LargeImageFile = LargeImageFile.GetPublic(),
                     FullsizeImageFile = FullsizeImageFile.GetPublic(),
-                    OriginalImageFile = OriginalImageFile.GetPublic()
+                    OriginalImageFile = OriginalImageFile?.GetPublic()
                 };
             }
 
