@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -e
+
+# Replace the connections string
+# and replace the following values in the command below:
+# /tmp/shuttre
+# /tmp/shuttre_magick
+# /example/of/image/source
+
+docker run \
+	--mount type=bind,src=/tmp/shuttre,dst=/data/shuttre \
+	--mount type=bind,src=/tmp/shuttre_magick,dst=/data/shuttre_magick \
+	--mount type=bind,src=/example/of/image/source,dst=/data/image_source/example,readonly \
+	-e SHUTTRE_CONNECTION_STRING='Server=10.0.0.100;Database=thedatabase;Uid=theusername;Pwd=thepassword;SslMode=none;' \
+	--rm \
+	-p 80:80 \
+	api.shutt.re
