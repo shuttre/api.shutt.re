@@ -16,7 +16,7 @@ namespace sqldb.shutt.re
 {
     public class PhotoDatabase : IPhotoDatabase
     {
-        private const ulong DatabaseVersion = 2;
+        private const ulong DatabaseVersion = 3;
         
         private static readonly MemoryCache Cache = new MemoryCache(new MemoryCacheOptions());
         private readonly string _connectionString;
