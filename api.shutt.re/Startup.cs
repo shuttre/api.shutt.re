@@ -36,10 +36,6 @@ namespace api.shutt.re
             // Examples: 'Server=127.0.0.1;Database=my_db_name;Uid=my_username;Pwd=my_password;SslMode=Preferred;'
             // Examples: 'Server=127.0.0.1;Database=my_db_name;Uid=my_username;Pwd=my_password;SslMode=Required;'
             var connectionString = StaticConfiguration["SHUTTRE_CONNECTION_STRING"];
-            
-            Console.WriteLine("connectionString:");
-            Console.WriteLine(connectionString);
-            
             IPhotoDatabase pdb = new PhotoDatabase(connectionString);
 
             var config = pdb.GetConfig().Result;           
